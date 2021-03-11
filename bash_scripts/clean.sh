@@ -33,12 +33,12 @@ rm -f .node-xmlhttprequest*
 rm -f ipfs.out
 rm -f modified_date.txt
 rm -f package-lock.json
-# rm -f .oc.pckl
 rm -f base/meta_data.json
 
 rm -rf docs/_build_html/
 rm -rf docs/_build/
 
+# rm -f .oc.pckl
 # pyclean
 
 printf "cleaning [ ${GREEN}SUCCESS${NC} ]\n"

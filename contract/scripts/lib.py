@@ -1,13 +1,28 @@
 #!/usr/bin/env python3
 
+import os
 import sys
 from os import path, popen
-from typing import List
+from pprint import pprint
+from typing import Dict, List
+
+from web3.logs import DISCARD
 
 import config
 import eblocbroker.Contract as Contract
+import libs.git as git
 from config import QuietExit
-from utils import CacheType, StorageID, _colorize_traceback, bytes32_to_ipfs, empty_bytes32, is_geth_account_locked, log
+from lib import get_tx_status
+from utils import (
+    CacheType,
+    StorageID,
+    _colorize_traceback,
+    bytes32_to_ipfs,
+    empty_bytes32,
+    is_geth_account_locked,
+    log,
+    silent_remove,
+)
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
@@ -36,11 +51,32 @@ class Job:
         self.folders_to_share: List[str] = []  # path of folder to share
         self.source_code_hashes: List[bytes] = []
         self.storage_hours: List[int] = []
+        self.storage_ids: List[int] = []
         self.cache_types: List[int] = []
         self.run_time = []
         self.Ebb = Contract.eblocbroker
+        self.keys = {}  # type: Dict[str, str]
+        self.foldername_tar_hash = {}  # type: Dict[str, str]
+        self.tar_hashes = {}  # type: Dict[str, str]
+        self.base_dir = ""
+
         for key, value in kwargs.items():
             setattr(self, key, value)
+
+    def analyze_tx_status(self, tx_hash) -> bool:
+        try:
+            tx_receipt = get_tx_status(tx_hash)
+            try:
+                processed_logs = self.Ebb.eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
+                pprint(vars(processed_logs[0].args))
+                log(f"==> job_index={processed_logs[0].args['index']}")
+            except IndexError:
+                log("E: Transaction is reverted")
+            return True
+        except Exception as e:
+            log(str(e), color="red")
+            _colorize_traceback()
+            return False
 
     def check(self):
         try:
@@ -62,6 +98,13 @@ class Job:
         for idx, storage_id in enumerate(self.storage_ids):
             if storage_id == StorageID.IPFS_GPG:
                 self.cache_types[idx] = CacheType.PRIVATE
+
+    def generate_git_repos(self):
+        git.generate_git_repo(self.folders_to_share)
+
+    def clean_before_submit(self):
+        for folder in self.folders_to_share:
+            silent_remove(os.path.join(folder, ".mypy_cache"), is_warning=False)
 
     def check_account_status(self, account_id):
         _Ebb = Contract.eblocbroker
@@ -168,13 +211,13 @@ class JobPrices:
 
                 #  if not received_storage_deposit and (received_block + storage_duration < w3.eth.blockNumber):
                 if not received_storage_deposit:
-                    data_transfer_in_sum += self.job.dataTransferIns[idx]
+                    data_transfer_in_sum += self.job.data_transfer_ins[idx]
                     if self.job.storage_hours[idx] > 0:
                         self.storage_cost += (
-                            self.price_storage * self.job.dataTransferIns[idx] * self.job.storage_hours[idx]
+                            self.price_storage * self.job.data_transfer_ins[idx] * self.job.storage_hours[idx]
                         )
                     else:
-                        self.cache_cost += self.price_cache * self.job.dataTransferIns[idx]
+                        self.cache_cost += self.price_cache * self.job.data_transfer_ins[idx]
         self.data_transfer_in_cost = self.price_data_transfer * data_transfer_in_sum
         self.data_transfer_out_cost = self.price_data_transfer * self.job.dataTransferOut
         self.data_transfer_cost = self.data_transfer_in_cost + self.data_transfer_out_cost

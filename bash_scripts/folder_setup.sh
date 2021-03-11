@@ -74,7 +74,7 @@ configure_ipfs () { # ipfs setups
     sudo chown $l:root /ipns
 }
 
-current_dir=$PWD
+current_dir=$HOME/eBlocBroker
 # Folder Setup:========================================================
 if [ ! -d /var/eBlocBroker ]; then
     sudo mkdir -p /var/eBlocBroker
@@ -92,7 +92,7 @@ mkdir -p $HOME/.eBlocBroker/transactions
 mkdir -p $HOME/.eBlocBroker/end_code_output
 mkdir -p $HOME/.eBlocBroker/cache
 
-if [ ! -f $current_dir/.env ]; then
+if [ ! -f $HOME/.eBlocBroker/.env ]; then
     cp $current_dir/.env $HOME/.eBlocBroker
 fi
 
@@ -151,7 +151,6 @@ echo -e "Note: Update the following file '~/.eBlocBroker/.eudat_provider.txt' \
      with your EUDAT account's password. \n \
      Best to make sure the file is not readable or even listable for anyone but you. \
      You achieve this with:\n 'chmod 700 eudat_password.txt'"
-
 
 ## Setup
 ## sudo ln -s /usr/bin/node /usr/local/bin/node

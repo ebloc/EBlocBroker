@@ -35,7 +35,6 @@ with open('../eblocbroker/abi.json','w') as fp:
 
 ----------------------------------------------------
 
-
 ```
 mv network-config_.yaml ~/.brownie/network-config.yaml
 ```

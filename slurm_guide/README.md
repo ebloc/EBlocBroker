@@ -1,43 +1,44 @@
 # Slurm Emulator Mode Setup
 
-## Guide1: https://slurm.schedmd.com/faq.html#multi_slurmd
-## Guide2: http://wildflower.diablonet.net/~scaron/slurmsetup.html
+## [Guide1]( http://wildflower.diablonet.net/~scaron/slurmsetup.html )
+## [Guide2]( https://slurm.schedmd.com/faq.html#multi_slurmd )
 
-```
-echo "$(whoami)@$(hostname)"
-apt-cache search mysql | grep "-dev"
-```
+1. Package install
 
 ```
 sudo apt-get update
-
 sudo apt-get install build-essential gcc libmunge-dev libmunge2 munge mysql-server
 sudo apt-get install mysql-client libmysqlclient-dev
 sudo apt-get install default-libmysqlclient-dev
-sudo apt-get install libmysqlclient
-sudo apt-get install libmysqld-dev
+#
+# apt-cache search mysql | grep "dev"
+# sudo apt-get install libmysqld-dev
+# sudo apt-get install libmysqlclient
 ```
 
-```
+```bash
+cd ~/
 git clone https://github.com/SchedMD/slurm
 cd slurm
-./configure --enable-debug --enable-multiple-slurmd | ./configure --enable-debug --enable-front-end
+
+# In order to emulate a larger cluster
+./configure --enable-debug --enable-multiple-slurmd  # ./configure --enable-debug --enable-front-end
 sudo make
 sudo make install
 
-sudo cp slurm.conf /usr/local/etc/slurm.conf
-sudo cp slurmdbd.conf /usr/local/etc/slurmdbd.conf
+sudo cp ~/eBlocBroker/slurm_guide/emulator_mode/slurm.conf /usr/local/etc/slurm.conf
+sudo cp ~/eBlocBroker/slurm_guide/emulator_mode/slurmdbd.conf /usr/local/etc/slurmdbd.conf
 ```
 
-6. Hostname setup:
+2. HOSTNAME Setup
 
 ```
-name="home"
-sudo hostnamectl set-hostname $name
+_HOSTNAME="home"
+sudo hostnamectl set-hostname $_HOSTNAME
 hostname
 ```
 
-7. Set things up for slurmdbd (the SLURM accounting daemon) in MySQL. !(slurm == $(username))!
+3. Set things up for slurmdbd (the SLURM accounting daemon) in MySQL. !(slurm == $(username))!
 
 Should run `sudo slurmdbd` on the background in order to register the slurm-user.
 
@@ -52,7 +53,7 @@ grant all privileges on slurm_acct_db.* to 'slurm'@'localhost';
 flush privileges;
 ```
 
-8. Cont
+3. Cont
 
 ```
 mkdir /var/log/slurm
@@ -81,7 +82,7 @@ sacctmgr show assoc format=account,user,partition where user=<user_name>
 sacctmgr show user -s
 ```
 
------------
+--------------------------------------------------------------------------------------------------------
 
 # mysql
 
